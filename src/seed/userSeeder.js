@@ -7,6 +7,7 @@ const userData = {
   role: "Developer",
   goal: "JLPT N3",
   streak: 1,
+  income: 15000000, // 15 triệu VND
   avatar:
     "https://jbagy.me/wp-content/uploads/2025/03/hinh-anh-avatar-anime-chibi-boy-11.jpg",
 };

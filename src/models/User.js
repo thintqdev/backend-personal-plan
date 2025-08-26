@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
     goal: { type: String },
     streak: { type: Number, default: 0 },
     avatar: { type: String }, // link ảnh avatar
+    income: { type: Number, default: 0 }, // thu nhập hàng tháng
     preferences: {
       theme: { type: String, default: "violet" },
       coverImage: { type: String },

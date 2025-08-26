@@ -17,15 +17,25 @@ const userRouter = require("./routes/user");
 const quoteRouter = require("./routes/quote");
 const taskRouter = require("./routes/task");
 const statsRouter = require("./routes/stats");
+const goalRouter = require("./routes/goal");
+const financeRouter = require("./routes/finance");
 
 app.use("/api/user", userRouter);
 app.use("/api/quotes", quoteRouter);
 app.use("/api/tasks", taskRouter);
 app.use("/api/stats", statsRouter);
+app.use("/api/goals", goalRouter);
+app.use("/api/finance", financeRouter);
 
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then(() => console.log("MongoDB connected"))
+  .then(() => {
+    console.log("MongoDB connected");
+
+    // Start cron jobs after DB connection
+    const { startCronJobs } = require("./services/cronService");
+    startCronJobs();
+  })
   .catch((err) => console.error("MongoDB connection error:", err));
 
 app.get("/", (req, res) => {

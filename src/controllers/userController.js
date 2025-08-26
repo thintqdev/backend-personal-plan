@@ -14,16 +14,19 @@ exports.getUser = async (req, res) => {
 // Cập nhật thông tin cá nhân
 exports.updateUser = async (req, res) => {
   try {
-    const { name, role, goal, streak, avatar } = req.body;
+    const { name, role, goal, streak, avatar, income } = req.body;
     let user = await User.findOne();
     if (!user) {
-      user = new User({ name, role, goal, streak, avatar });
+      user = new User({ name, role, goal, streak, avatar, income });
     } else {
       user.name = name;
       user.role = role;
       user.goal = goal;
       user.streak = streak;
       user.avatar = avatar;
+      if (income !== undefined) {
+        user.income = income;
+      }
     }
     await user.save();
     res.json(user);
@@ -69,6 +72,35 @@ exports.updateUserPreferences = async (req, res) => {
 
     await user.save();
     res.json(user.preferences);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// PUT /api/user/income - Cập nhật thu nhập
+exports.updateUserIncome = async (req, res) => {
+  try {
+    const { income } = req.body;
+
+    if (income === undefined || income < 0) {
+      return res
+        .status(400)
+        .json({ error: "Income must be a non-negative number" });
+    }
+
+    let user = await User.findOne();
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.income = income;
+    await user.save();
+
+    res.json({
+      message: "Income updated successfully",
+      income: user.income,
+      user: user,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

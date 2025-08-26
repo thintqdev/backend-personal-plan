@@ -12,13 +12,18 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@fontsource/inter": "^5.2.6",
+    "@fontsource/roboto": "^5.2.6",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "mongoose": "^8.18.0",
+    "node-cron": "^4.2.1",
+    "pdfkit": "^0.17.1",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "ttfinfo": "^0.2.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
