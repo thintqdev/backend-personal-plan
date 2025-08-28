@@ -19,6 +19,7 @@ const taskRouter = require("./routes/task");
 const statsRouter = require("./routes/stats");
 const goalRouter = require("./routes/goal");
 const financeRouter = require("./routes/finance");
+const noteRouter = require("./routes/note");
 
 app.use("/api/user", userRouter);
 app.use("/api/quotes", quoteRouter);
@@ -26,6 +27,7 @@ app.use("/api/tasks", taskRouter);
 app.use("/api/stats", statsRouter);
 app.use("/api/goals", goalRouter);
 app.use("/api/finance", financeRouter);
+app.use("/api/notes", noteRouter);
 
 mongoose
   .connect(process.env.MONGODB_URI)
