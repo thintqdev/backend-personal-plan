@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const goalController = require("../controllers/goalController");
+const { authenticateJWT, optionalJWT } = require("../middlewares/jwtAuth");
 
 /**
  * @swagger
@@ -236,17 +237,17 @@ const goalController = require("../controllers/goalController");
  */
 
 // Routes
-router.get("/", goalController.getAllGoals);
-router.get("/filter", goalController.getGoalsByFilter);
-router.get("/stats", goalController.getGoalStats);
-router.get("/:id", goalController.getGoalById);
-router.post("/", goalController.createGoal);
-router.put("/:id", goalController.updateGoal);
-router.delete("/:id", goalController.deleteGoal);
+router.get("/", optionalJWT, goalController.getAllGoals);
+router.get("/filter", optionalJWT, goalController.getGoalsByFilter);
+router.get("/stats", optionalJWT, goalController.getGoalStats);
+router.get("/:id", optionalJWT, goalController.getGoalById);
+router.post("/", authenticateJWT, goalController.createGoal);
+router.put("/:id", authenticateJWT, goalController.updateGoal);
+router.delete("/:id", authenticateJWT, goalController.deleteGoal);
 
 // SubGoal routes
-router.post("/:id/subgoals", goalController.addSubGoal);
-router.put("/:goalId/subgoals/:subgoalId", goalController.updateSubGoal);
-router.delete("/:goalId/subgoals/:subgoalId", goalController.deleteSubGoal);
+router.post("/:id/subgoals", authenticateJWT, goalController.addSubGoal);
+router.put("/:goalId/subgoals/:subgoalId", authenticateJWT, goalController.updateSubGoal);
+router.delete("/:goalId/subgoals/:subgoalId", authenticateJWT, goalController.deleteSubGoal);
 
 module.exports = router;

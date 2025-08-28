@@ -3,6 +3,7 @@ const router = express.Router();
 const financeJarController = require("../controllers/financeJarController");
 const transactionController = require("../controllers/transactionController");
 const monthlyReportRoutes = require("./monthlyReport");
+const { authenticateJWT, optionalJWT } = require("../middlewares/jwtAuth");
 
 /**
  * @swagger
@@ -189,26 +190,27 @@ const monthlyReportRoutes = require("./monthlyReport");
  */
 
 // Finance Jar Routes
-router.get("/jars", financeJarController.getAllJars);
-router.get("/jars/:id", financeJarController.getJarById);
-router.post("/jars", financeJarController.createJar);
-router.put("/jars/:id", financeJarController.updateJar);
-router.delete("/jars/:id", financeJarController.deleteJar);
+router.get("/jars", optionalJWT, financeJarController.getAllJars);
+router.get("/jars/:id", optionalJWT, financeJarController.getJarById);
+router.post("/jars", authenticateJWT, financeJarController.createJar);
+router.put("/jars/:id", authenticateJWT, financeJarController.updateJar);
+router.delete("/jars/:id", authenticateJWT, financeJarController.deleteJar);
 
 // Finance Overview
-router.get("/overview", financeJarController.getFinanceOverview);
+router.get("/overview", optionalJWT, financeJarController.getFinanceOverview);
 
 // Transaction Routes
-router.get("/transactions", transactionController.getAllTransactions);
-router.get("/transactions/stats", transactionController.getTransactionStats);
-router.get("/transactions/:id", transactionController.getTransactionById);
-router.post("/transactions", transactionController.createTransaction);
-router.put("/transactions/:id", transactionController.updateTransaction);
-router.delete("/transactions/:id", transactionController.deleteTransaction);
+router.get("/transactions", optionalJWT, transactionController.getAllTransactions);
+router.get("/transactions/stats", optionalJWT, transactionController.getTransactionStats);
+router.get("/transactions/:id", optionalJWT, transactionController.getTransactionById);
+router.post("/transactions", authenticateJWT, transactionController.createTransaction);
+router.put("/transactions/:id", authenticateJWT, transactionController.updateTransaction);
+router.delete("/transactions/:id", authenticateJWT, transactionController.deleteTransaction);
 
 // Jar-specific transaction routes
 router.get(
   "/jars/:jarId/transactions",
+  optionalJWT,
   transactionController.getTransactionsByJar
 );
 

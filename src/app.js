@@ -13,6 +13,7 @@ const setupSwagger = require("./swagger");
 setupSwagger(app);
 
 // Routes
+const authRouter = require("./routes/auth");
 const userRouter = require("./routes/user");
 const quoteRouter = require("./routes/quote");
 const taskRouter = require("./routes/task");
@@ -20,7 +21,10 @@ const statsRouter = require("./routes/stats");
 const goalRouter = require("./routes/goal");
 const financeRouter = require("./routes/finance");
 const noteRouter = require("./routes/note");
+const coverRouter = require("./routes/cover");
 
+// Authentication routes
+app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 app.use("/api/quotes", quoteRouter);
 app.use("/api/tasks", taskRouter);
@@ -28,6 +32,7 @@ app.use("/api/stats", statsRouter);
 app.use("/api/goals", goalRouter);
 app.use("/api/finance", financeRouter);
 app.use("/api/notes", noteRouter);
+app.use("/api/covers", coverRouter);
 
 mongoose
   .connect(process.env.MONGODB_URI)

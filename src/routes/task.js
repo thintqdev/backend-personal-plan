@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const taskController = require("../controllers/taskController");
+const { authenticateJWT, optionalJWT } = require("../middlewares/jwtAuth");
 
 /**
  * @swagger
@@ -53,13 +54,13 @@ const taskController = require("../controllers/taskController");
  *   get:
  *     summary: Lấy trạng thái task
  */
-router.get("/", taskController.getTasks); // ?day=Thứ Hai
-router.post("/", taskController.createTask);
-router.put("/:id", taskController.updateTask);
-router.delete("/:id", taskController.deleteTask);
+router.get("/", optionalJWT, taskController.getTasks); // ?day=Thứ Hai
+router.post("/", authenticateJWT, taskController.createTask);
+router.put("/:id", authenticateJWT, taskController.updateTask);
+router.delete("/:id", authenticateJWT, taskController.deleteTask);
 
 // Task completion endpoints
-router.patch("/:id/complete", taskController.toggleTaskComplete);
-router.get("/:id/status", taskController.getTaskStatus);
+router.patch("/:id/complete", authenticateJWT, taskController.toggleTaskComplete);
+router.get("/:id/status", optionalJWT, taskController.getTaskStatus);
 
 module.exports = router;

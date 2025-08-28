@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const noteController = require("../controllers/noteController");
+const { authenticateJWT, optionalJWT } = require("../middlewares/jwtAuth");
 
 /**
  * @swagger
@@ -191,8 +192,8 @@ const noteController = require("../controllers/noteController");
  *       400:
  *         description: Dữ liệu không hợp lệ
  */
-router.get("/folders", noteController.getAllFolders);
-router.post("/folders", noteController.createFolder);
+router.get("/folders", optionalJWT, noteController.getAllFolders);
+router.post("/folders", authenticateJWT, noteController.createFolder);
 
 /**
  * @swagger
@@ -247,8 +248,8 @@ router.post("/folders", noteController.createFolder);
  *       404:
  *         description: Folder not found
  */
-router.put("/folders/:id", noteController.updateFolder);
-router.delete("/folders/:id", noteController.deleteFolder);
+router.put("/folders/:id", authenticateJWT, noteController.updateFolder);
+router.delete("/folders/:id", authenticateJWT, noteController.deleteFolder);
 
 // ==================== NOTE ROUTES ====================
 
@@ -286,8 +287,8 @@ router.delete("/folders/:id", noteController.deleteFolder);
  *       400:
  *         description: Dữ liệu không hợp lệ
  */
-router.get("/", noteController.getAllNotes);
-router.post("/", noteController.createNote);
+router.get("/", optionalJWT, noteController.getAllNotes);
+router.post("/", authenticateJWT, noteController.createNote);
 
 /**
  * @swagger
@@ -305,7 +306,7 @@ router.post("/", noteController.createNote);
  *               items:
  *                 $ref: '#/components/schemas/NotesTree'
  */
-router.get("/tree", noteController.getNotesTree);
+router.get("/tree", optionalJWT, noteController.getNotesTree);
 
 /**
  * @swagger
@@ -342,7 +343,7 @@ router.get("/tree", noteController.getNotesTree);
  *       400:
  *         description: Thiếu từ khóa tìm kiếm
  */
-router.get("/search", noteController.searchNotes);
+router.get("/search", optionalJWT, noteController.searchNotes);
 
 /**
  * @swagger
@@ -378,7 +379,7 @@ router.get("/search", noteController.searchNotes);
  *                       count:
  *                         type: number
  */
-router.get("/stats", noteController.getNoteStats);
+router.get("/stats", optionalJWT, noteController.getNoteStats);
 
 /**
  * @swagger
@@ -404,7 +405,7 @@ router.get("/stats", noteController.getNoteStats);
  *       404:
  *         description: Folder not found
  */
-router.get("/folder/:folderId", noteController.getNotesByFolder);
+router.get("/folder/:folderId", optionalJWT, noteController.getNotesByFolder);
 
 /**
  * @swagger
@@ -466,8 +467,8 @@ router.get("/folder/:folderId", noteController.getNotesByFolder);
  *       404:
  *         description: Note not found
  */
-router.get("/:id", noteController.getNoteById);
-router.put("/:id", noteController.updateNote);
-router.delete("/:id", noteController.deleteNote);
+router.get("/:id", optionalJWT, noteController.getNoteById);
+router.put("/:id", authenticateJWT, noteController.updateNote);
+router.delete("/:id", authenticateJWT, noteController.deleteNote);
 
 module.exports = router;

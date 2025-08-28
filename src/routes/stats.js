@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const statsController = require("../controllers/statsController");
+const { optionalJWT } = require("../middlewares/jwtAuth");
 
 /**
  * @swagger
@@ -31,7 +32,7 @@ const statsController = require("../controllers/statsController");
  *                   type: number
  *                   example: 35
  */
-router.get("/", statsController.getGeneralStats);
+router.get("/", optionalJWT, statsController.getGeneralStats);
 
 /**
  * @swagger
@@ -53,7 +54,7 @@ router.get("/", statsController.getGeneralStats);
  *                 completedTasks:
  *                   type: number
  */
-router.get("/today", statsController.getTodayStats);
+router.get("/today", optionalJWT, statsController.getTodayStats);
 
 /**
  * @swagger
@@ -75,6 +76,6 @@ router.get("/today", statsController.getTodayStats);
  *                 completedTasks:
  *                   type: number
  */
-router.get("/week", statsController.getWeekStats);
+router.get("/week", optionalJWT, statsController.getWeekStats);
 
 module.exports = router;
