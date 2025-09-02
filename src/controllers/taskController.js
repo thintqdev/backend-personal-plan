@@ -7,15 +7,7 @@ exports.getTasks = async (req, res) => {
 
     if (!day) {
       const tasks = await Task.find();
-      return res.json({
-        tasks: tasks.map((task) => ({
-          _id: task._id,
-          time: task.time,
-          task: task.task,
-          type: task.type,
-          completed: task.completed,
-        })),
-      });
+      return res.json(tasks);
     }
 
     const tasks = await Task.find({ day });
@@ -23,13 +15,7 @@ exports.getTasks = async (req, res) => {
     // Trả về format theo yêu cầu FE
     const response = {
       day: day,
-      tasks: tasks.map((task) => ({
-        _id: task._id,
-        time: task.time,
-        task: task.task,
-        type: task.type,
-        completed: task.completed,
-      })),
+      tasks: tasks,
     };
 
     res.json(response);
@@ -54,10 +40,21 @@ exports.createTask = async (req, res) => {
 exports.updateTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const { day, type, time, task } = req.body;
+    const { day, type, time, task, completed } = req.body;
+
+    const updateData = { day, type, time, task };
+    if (completed !== undefined) {
+      updateData.completed = completed;
+      if (completed) {
+        updateData.completedAt = new Date();
+      } else {
+        updateData.completedAt = null;
+      }
+    }
+
     const updatedTask = await Task.findByIdAndUpdate(
       id,
-      { day, type, time, task },
+      updateData,
       { new: true }
     );
     if (!updatedTask) return res.status(404).json({ error: "Task not found" });
