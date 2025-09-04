@@ -41,17 +41,7 @@ const monthlyReportCron = cron.schedule(
   }
 );
 
-// Cron job test - chạy mỗi phút (để test)
-const testCron = cron.schedule(
-  "*/1 * * * *", // Mỗi phút
-  () => {
-    console.log("Test cron job running at:", new Date().toISOString());
-  },
-  {
-    scheduled: false,
-    timezone: "Asia/Ho_Chi_Minh",
-  }
-);
+
 
 // Khởi động các cron jobs
 function startCronJobs() {
@@ -104,5 +94,4 @@ module.exports = {
   stopCronJobs,
   runManualMonthlyReport,
   monthlyReportCron,
-  testCron,
 };
