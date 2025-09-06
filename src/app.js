@@ -20,6 +20,8 @@ const statsRouter = require("./routes/stats");
 const goalRouter = require("./routes/goal");
 const financeRouter = require("./routes/finance");
 const noteRouter = require("./routes/note");
+const savingsGoalRouter = require("./routes/savingsGoal");
+const aiExpenseRouter = require("./routes/aiExpense");
 
 app.use("/api/user", userRouter);
 app.use("/api/quotes", quoteRouter);
@@ -28,6 +30,8 @@ app.use("/api/stats", statsRouter);
 app.use("/api/goals", goalRouter);
 app.use("/api/finance", financeRouter);
 app.use("/api/notes", noteRouter);
+app.use("/api/savings-goals", savingsGoalRouter);
+app.use("/api/ai-expense", aiExpenseRouter);
 
 mongoose
   .connect(process.env.MONGODB_URI)
