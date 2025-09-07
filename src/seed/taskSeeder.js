@@ -264,12 +264,26 @@ const tasks = [
   },
 ];
 
-async function seedTasks() {
-  await mongoose.connect(process.env.MONGODB_URI);
-  await Task.deleteMany({});
-  await Task.insertMany(tasks);
+async function seedTasks(userId) {
+  if (!userId) throw new Error("Thiếu userId khi seed tasks");
+  // Gán userId vào từng task
+  const tasksWithUser = tasks.map(t => ({ ...t, userId }));
+  await Task.deleteMany({ userId });
+  await Task.insertMany(tasksWithUser);
   console.log("Tasks seeded!");
-  await mongoose.disconnect();
 }
 
-seedTasks();
+if (require.main === module) {
+  // Cho phép chạy độc lập để test
+  require("dotenv").config();
+  const mongoose = require("mongoose");
+  mongoose.connect(process.env.MONGODB_URI).then(async () => {
+    // Lấy user đầu tiên để test
+    const User = require("../models/User");
+    const user = await User.findOne();
+    if (!user) throw new Error("Chưa có user để seed tasks");
+    await seedTasks(user._id);
+    await mongoose.disconnect();
+  });
+}
+module.exports = seedTasks;

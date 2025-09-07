@@ -1,56 +1,62 @@
 const { Note, NoteFolder } = require("../models/Note");
 
-const seedNoteData = async () => {
-    try {
-        // Clear existing data
-        await Note.deleteMany({});
-        await NoteFolder.deleteMany({});
+const seedNoteData = async (userId) => {
+  try {
+    // Clear existing data
+    if (!userId) throw new Error("Thiếu userId khi seed notes");
+    await Note.deleteMany({ userId });
+    await NoteFolder.deleteMany({ userId });
 
-        // Create default folders
-        const folders = await NoteFolder.insertMany([
-            {
-                label: "Tài chính",
-                color: "#059669",
-                icon: "dollar-sign",
-                isDefault: true,
-                sortOrder: 1,
-            },
-            {
-                label: "Cá nhân",
-                color: "#7C3AED",
-                icon: "user",
-                isDefault: true,
-                sortOrder: 2,
-            },
-            {
-                label: "Công việc",
-                color: "#DC2626",
-                icon: "briefcase",
-                isDefault: false,
-                sortOrder: 3,
-            },
-            {
-                label: "Học tập",
-                color: "#2563EB",
-                icon: "book-open",
-                isDefault: false,
-                sortOrder: 4,
-            },
-            {
-                label: "Ý tưởng",
-                color: "#F59E0B",
-                icon: "lightbulb",
-                isDefault: false,
-                sortOrder: 5,
-            },
-        ]);
+    // Create default folders
+    const folders = await NoteFolder.insertMany([
+      {
+        label: "Tài chính",
+        color: "#059669",
+        icon: "dollar-sign",
+        isDefault: true,
+        sortOrder: 1,
+        userId,
+      },
+      {
+        label: "Cá nhân",
+        color: "#7C3AED",
+        icon: "user",
+        isDefault: true,
+        sortOrder: 2,
+        userId,
+      },
+      {
+        label: "Công việc",
+        color: "#DC2626",
+        icon: "briefcase",
+        isDefault: false,
+        sortOrder: 3,
+        userId,
+      },
+      {
+        label: "Học tập",
+        color: "#2563EB",
+        icon: "book-open",
+        isDefault: false,
+        sortOrder: 4,
+        userId,
+      },
+      {
+        label: "Ý tưởng",
+        color: "#F59E0B",
+        icon: "lightbulb",
+        isDefault: false,
+        sortOrder: 5,
+        userId,
+      },
+    ]);
 
-        // Create sample notes
-        const notes = [
-            // Tài chính folder notes
-            {
-                title: "Báo cáo chi tiêu tháng 8",
-                content: `
+    // Create sample notes
+    const notes = [
+      // Tài chính folder notes
+      {
+        title: "Báo cáo chi tiêu tháng 8",
+        content: `
           <h3>Bảng tổng hợp chi tiêu</h3>
           <table>
             <thead><tr><th>Hạng mục</th><th>Số tiền</th><th>Ghi chú</th></tr></thead>
@@ -69,13 +75,13 @@ const seedNoteData = async () => {
           </ul>
           <p><em>Tổng kết: Đã đạt mục tiêu tiết kiệm 25% thu nhập tháng này!</em></p>
         `,
-                folderId: folders[0]._id,
-                tags: ["báo cáo", "chi tiêu", "tháng 8"],
-                isFavorite: true,
-            },
-            {
-                title: "Kế hoạch tiết kiệm 2024",
-                content: `
+        folderId: folders[0]._id,
+        tags: ["báo cáo", "chi tiêu", "tháng 8"],
+        isFavorite: true,
+      },
+      {
+        title: "Kế hoạch tiết kiệm 2024",
+        content: `
           <h3>Mục tiêu tài chính năm 2024</h3>
           <ol>
             <li><strong>Đặt mục tiêu tiết kiệm 20% thu nhập mỗi tháng</strong>
@@ -97,15 +103,15 @@ const seedNoteData = async () => {
             <li><strong>Review và điều chỉnh hàng tháng</strong></li>
           </ol>
         `,
-                folderId: folders[0]._id,
-                tags: ["kế hoạch", "tiết kiệm", "2024"],
-                isFavorite: false,
-            },
+        folderId: folders[0]._id,
+        tags: ["kế hoạch", "tiết kiệm", "2024"],
+        isFavorite: false,
+      },
 
-            // Cá nhân folder notes
-            {
-                title: "Danh sách việc cần làm hàng ngày",
-                content: `
+      // Cá nhân folder notes
+      {
+        title: "Danh sách việc cần làm hàng ngày",
+        content: `
           <h3>Morning Routine (6:00 - 8:00)</h3>
           <ul>
             <li>☐ Thức dậy lúc 6:00</li>
@@ -132,13 +138,13 @@ const seedNoteData = async () => {
             <li>☐ Đi ngủ trước 22:30</li>
           </ul>
         `,
-                folderId: folders[1]._id,
-                tags: ["routine", "thói quen", "hàng ngày"],
-                isFavorite: true,
-            },
-            {
-                title: "Ghi chú meeting với sếp",
-                content: `
+        folderId: folders[1]._id,
+        tags: ["routine", "thói quen", "hàng ngày"],
+        isFavorite: true,
+      },
+      {
+        title: "Ghi chú meeting với sếp",
+        content: `
           <h4>Meeting ngày 20/8/2024 - 14:00</h4>
           <p><strong>Người tham dự:</strong> Tôi, Manager, Tech Lead</p>
           
@@ -177,15 +183,15 @@ const seedNoteData = async () => {
             <li>☐ First sprint planning meeting (28/8)</li>
           </ul>
         `,
-                folderId: folders[1]._id,
-                tags: ["meeting", "dự án", "công việc"],
-                isFavorite: false,
-            },
+        folderId: folders[1]._id,
+        tags: ["meeting", "dự án", "công việc"],
+        isFavorite: false,
+      },
 
-            // Công việc folder notes
-            {
-                title: "Ý tưởng cải thiện workflow",
-                content: `
+      // Công việc folder notes
+      {
+        title: "Ý tưởng cải thiện workflow",
+        content: `
           <h3>Vấn đề hiện tại:</h3>
           <ul>
             <li>Code review mất quá nhiều thời gian</li>
@@ -229,15 +235,15 @@ const seedNoteData = async () => {
             <tr><td>Documentation</td><td>3 weeks</td><td>All developers</td></tr>
           </table>
         `,
-                folderId: folders[2]._id,
-                tags: ["workflow", "automation", "cải thiện"],
-                isFavorite: false,
-            },
+        folderId: folders[2]._id,
+        tags: ["workflow", "automation", "cải thiện"],
+        isFavorite: false,
+      },
 
-            // Học tập folder notes
-            {
-                title: "Kế hoạch học tiếng Nhật N3",
-                content: `
+      // Học tập folder notes
+      {
+        title: "Kế hoạch học tiếng Nhật N3",
+        content: `
           <h3>Mục tiêu: Đạt JLPT N3 vào tháng 12/2024</h3>
           
           <h4>Thời gian học: 2 tiếng/ngày</h4>
@@ -286,15 +292,15 @@ const seedNoteData = async () => {
             <tr><td>CN</td><td>Review + Mock exam</td><td>✓</td></tr>
           </table>
         `,
-                folderId: folders[3]._id,
-                tags: ["tiếng nhật", "N3", "kế hoạch học"],
-                isFavorite: true,
-            },
+        folderId: folders[3]._id,
+        tags: ["tiếng nhật", "N3", "kế hoạch học"],
+        isFavorite: true,
+      },
 
-            // Ý tưởng folder notes
-            {
-                title: "Ý tưởng app quản lý thời gian",
-                content: `
+      // Ý tưởng folder notes
+      {
+        title: "Ý tưởng app quản lý thời gian",
+        content: `
           <h3>Concept: "TimeWise" - Smart Time Management App</h3>
           
           <h4>Problem Statement:</h4>
@@ -358,41 +364,41 @@ const seedNoteData = async () => {
             <li>Launch + marketing campaign</li>
           </ol>
         `,
-                folderId: folders[4]._id,
-                tags: ["app", "time management", "AI", "startup"],
-                isFavorite: true,
-            },
-        ];
+        folderId: folders[4]._id,
+        tags: ["app", "time management", "AI", "startup"],
+        isFavorite: true,
+      },
+    ];
 
-        // Insert notes with proper folder references
-        await Note.insertMany(notes);
+    // Insert notes with proper folder references and userId
+    await Note.insertMany(notes.map(n => ({ ...n, userId })));
 
-        console.log("✅ Note seed data created successfully!");
-        console.log(`📁 Created ${folders.length} folders`);
-        console.log(`📝 Created ${notes.length} notes`);
+    console.log("✅ Note seed data created successfully!");
+    console.log(`📁 Created ${folders.length} folders`);
+    console.log(`📝 Created ${notes.length} notes`);
 
-    } catch (error) {
-        console.error("❌ Error seeding note data:", error);
-        throw error;
-    }
+  } catch (error) {
+    console.error("❌ Error seeding note data:", error);
+    throw error;
+  }
 };
 
 // Run seeding if this file is executed directly
 if (require.main === module) {
-    const mongoose = require("mongoose");
-    require("dotenv").config();
+  const mongoose = require("mongoose");
+  require("dotenv").config();
 
-    mongoose
-        .connect(process.env.MONGODB_URI)
-        .then(async () => {
-            console.log("MongoDB connected for seeding...");
-            await seedNoteData();
-            process.exit(0);
-        })
-        .catch((err) => {
-            console.error("MongoDB connection error:", err);
-            process.exit(1);
-        });
+  mongoose
+    .connect(process.env.MONGODB_URI)
+    .then(async () => {
+      console.log("MongoDB connected for seeding...");
+      await seedNoteData();
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error("MongoDB connection error:", err);
+      process.exit(1);
+    });
 }
 
-module.exports = { seedNoteData };
+module.exports = async function (userId) { return seedNoteData(userId); };

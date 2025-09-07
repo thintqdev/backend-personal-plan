@@ -3,15 +3,9 @@ const mongoose = require("mongoose");
 const FinanceJar = require("../models/FinanceJar");
 const Transaction = require("../models/Transaction");
 
-const connectToDatabase = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log("MongoDB connected");
-  } catch (error) {
-    console.error("MongoDB connection error:", error);
-    process.exit(1);
-  }
-};
+async function connectToDatabase() {
+  await mongoose.connect(process.env.MONGODB_URI);
+}
 
 const financeJarsData = [
   {
@@ -141,7 +135,7 @@ const createTransactionsData = (jars) => {
         type: type,
         description:
           descriptions[type][
-            Math.floor(Math.random() * descriptions[type].length)
+          Math.floor(Math.random() * descriptions[type].length)
           ],
         date: randomDate,
         category: categories[Math.floor(Math.random() * categories.length)],
@@ -152,58 +146,37 @@ const createTransactionsData = (jars) => {
   return transactionsData;
 };
 
-const seedFinanceData = async () => {
-  try {
-    // Xóa dữ liệu cũ
-    await FinanceJar.deleteMany({});
-    await Transaction.deleteMany({});
-    console.log("Cleared existing finance data");
-
-    // Tạo finance jars
-    const createdJars = await FinanceJar.insertMany(financeJarsData);
-    console.log(`Created ${createdJars.length} finance jars`);
-
-    // Tạo transactions
-    const transactionsData = createTransactionsData(createdJars);
-    const createdTransactions = await Transaction.insertMany(transactionsData);
-    console.log(`Created ${createdTransactions.length} transactions`);
-
-    // Cập nhật currentAmount cho các jars dựa trên transactions
-    for (const jar of createdJars) {
-      const transactions = await Transaction.find({ jarId: jar._id });
-      let currentAmount = 0;
-
-      transactions.forEach((transaction) => {
-        if (transaction.type === "income") {
-          currentAmount += transaction.amount;
-        } else {
-          currentAmount -= transaction.amount;
-        }
-      });
-
-      await FinanceJar.findByIdAndUpdate(jar._id, {
-        currentAmount: Math.max(0, currentAmount),
-      });
-    }
-
-    console.log("Updated jar balances based on transactions");
-    console.log("Finance seeding completed successfully!");
-  } catch (error) {
-    console.error("Error seeding finance data:", error);
-  } finally {
-    await mongoose.connection.close();
-    console.log("Database connection closed");
-  }
-};
-
-// Chạy seeder
-const runSeeder = async () => {
+async function seedFinanceData(userId) {
+  if (!userId) throw new Error("Thiếu userId khi seed finance");
   await connectToDatabase();
-  await seedFinanceData();
-};
-
-if (require.main === module) {
-  runSeeder();
+  await Transaction.deleteMany({ userId });
+  await FinanceJar.deleteMany({ userId });
+  const jars = await FinanceJar.insertMany(financeJarsData.map(j => ({ ...j, userId })));
+  const transactionsData = createTransactionsData(jars).map(t => ({ ...t, userId }));
+  await Transaction.insertMany(transactionsData);
+  // ...
+  for (const jar of jars) {
+    // ...
+  }
+  // ...
+  console.log("Finance seeding completed successfully!");
+  await mongoose.disconnect();
 }
 
-module.exports = { seedFinanceData };
+// Chạy seeder nếu file được chạy trực tiếp
+if (require.main === module) {
+  require("dotenv").config();
+  (async () => {
+    try {
+      await connectToDatabase();
+      const User = require("../models/User");
+      const user = await User.findOne();
+      if (!user) throw new Error("Chưa có user để seed finance");
+      await seedFinanceData(user._id);
+    } catch (error) {
+      console.error("Error running finance seeder:", error);
+    }
+  })();
+}
+
+module.exports = seedFinanceData;

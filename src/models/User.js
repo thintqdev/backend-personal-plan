@@ -3,9 +3,14 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    role: { type: String, required: true },
-    goal: { type: String },
-    streak: { type: Number, default: 0 },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    status: { type: String, enum: ["active", "inactive", "banned"], default: "active" },
+    verified_email_at: { type: Date },
+    login_attempt: { type: Number, default: 0 },
+    last_login: { type: Date },
+    role: { type: String, required: true }, // ở đây chỉ ngành nghề của user thôi
+    goal: { type: String }, // Đây như là bio của user
+    streak: { type: Number, default: 0 }, // số ngày liên tục sử dụng app
     avatar: { type: String }, // link ảnh avatar
     income: { type: Number, default: 0 }, // thu nhập hàng tháng
     preferences: {
@@ -13,6 +18,9 @@ const userSchema = new mongoose.Schema(
       coverImage: { type: String },
       notifications: { type: Boolean, default: true },
       language: { type: String, default: "vi" },
+    },
+    subscription: {
+      isActive: { type: Boolean, default: false },
     },
   },
   {
