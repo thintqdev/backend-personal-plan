@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const auth = require("../middleware/auth");
 const {
     getSavingsGoals,
     createSavingsGoal,
@@ -103,7 +104,7 @@ const {
  *                   items:
  *                     $ref: '#/components/schemas/SavingsGoal'
  */
-router.get('/', getSavingsGoals);
+router.get('/', auth, getSavingsGoals);
 
 /**
  * @swagger
@@ -154,7 +155,7 @@ router.get('/', getSavingsGoals);
  *                 message:
  *                   type: string
  */
-router.post('/', createSavingsGoal);
+router.post('/', auth, createSavingsGoal);
 
 /**
  * @swagger
@@ -200,7 +201,7 @@ router.post('/', createSavingsGoal);
  *       200:
  *         description: Mục tiêu tiết kiệm được cập nhật thành công
  */
-router.put('/:id', updateSavingsGoal);
+router.put('/:id', auth, updateSavingsGoal);
 
 /**
  * @swagger
@@ -219,7 +220,7 @@ router.put('/:id', updateSavingsGoal);
  *       200:
  *         description: Mục tiêu tiết kiệm được xóa thành công
  */
-router.delete('/:id', deleteSavingsGoal);
+router.delete('/:id', auth, deleteSavingsGoal);
 
 /**
  * @swagger
@@ -252,7 +253,7 @@ router.delete('/:id', deleteSavingsGoal);
  *       200:
  *         description: Thêm tiền thành công
  */
-router.post('/:id/add-money', addMoneyToGoal);
+router.post('/:id/add-money', auth, addMoneyToGoal);
 
 /**
  * @swagger
@@ -285,7 +286,7 @@ router.post('/:id/add-money', addMoneyToGoal);
  *       200:
  *         description: Rút tiền thành công
  */
-router.post('/:id/withdraw-money', withdrawMoneyFromGoal);
+router.post('/:id/withdraw-money', auth, withdrawMoneyFromGoal);
 
 /**
  * @swagger
@@ -315,6 +316,6 @@ router.post('/:id/withdraw-money', withdrawMoneyFromGoal);
  *                   items:
  *                     $ref: '#/components/schemas/SavingsTransaction'
  */
-router.get('/:id/transactions', getSavingsGoalTransactions);
+router.get('/:id/transactions', auth, getSavingsGoalTransactions);
 
 module.exports = router;

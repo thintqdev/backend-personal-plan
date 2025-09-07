@@ -5,7 +5,8 @@ const FinanceJar = require("../models/FinanceJar");
 exports.getAllTransactions = async (req, res) => {
   try {
     const { jarId, type, category, startDate, endDate, limit } = req.query;
-    const filter = {};
+    const userId = req.user._id;
+    const filter = { userId };
 
     if (jarId) filter.jarId = jarId;
     if (type) filter.type = type;
@@ -35,13 +36,14 @@ exports.getAllTransactions = async (req, res) => {
 exports.getTransactionById = async (req, res) => {
   try {
     const { id } = req.params;
-    const transaction = await Transaction.findById(id).populate(
+    const userId = req.user._id;
+    const transaction = await Transaction.findOne({ _id: id, userId }).populate(
       "jarId",
       "name color icon"
     );
 
     if (!transaction) {
-      return res.status(404).json({ error: "Transaction not found" });
+      return res.status(404).json({ error: "Transaction not found or access denied" });
     }
 
     res.json(transaction);
@@ -264,12 +266,12 @@ exports.getTransactionStats = async (req, res) => {
       stats.length > 0
         ? stats[0]
         : {
-            totalTransactions: 0,
-            totalIncome: 0,
-            totalExpenses: 0,
-            incomeCount: 0,
-            expenseCount: 0,
-          };
+          totalTransactions: 0,
+          totalIncome: 0,
+          totalExpenses: 0,
+          incomeCount: 0,
+          expenseCount: 0,
+        };
 
     result.netAmount = result.totalIncome - result.totalExpenses;
     result.categoryBreakdown = categoryStats;

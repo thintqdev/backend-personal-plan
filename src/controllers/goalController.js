@@ -3,7 +3,9 @@ const Goal = require("../models/Goal");
 // GET /api/goals - Lấy tất cả goals
 exports.getAllGoals = async (req, res) => {
   try {
-    const goals = await Goal.find().sort({ createdAt: -1 });
+    const userId = req.user._id;
+
+    const goals = await Goal.find({ userId }).sort({ createdAt: -1 });
     res.json(goals);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -14,10 +16,11 @@ exports.getAllGoals = async (req, res) => {
 exports.getGoalById = async (req, res) => {
   try {
     const { id } = req.params;
-    const goal = await Goal.findById(id);
+    const userId = req.user._id;
+    const goal = await Goal.findOne({ _id: id, userId });
 
     if (!goal) {
-      return res.status(404).json({ error: "Goal not found" });
+      return res.status(404).json({ error: "Goal not found or access denied" });
     }
 
     res.json(goal);
@@ -38,8 +41,10 @@ exports.createGoal = async (req, res) => {
       targetDate,
       subGoals,
     } = req.body;
+    const userId = req.user._id;
 
     const goalData = {
+      userId,
       title,
       description,
       category,
@@ -88,6 +93,7 @@ exports.updateGoal = async (req, res) => {
       targetDate,
       subGoals,
     } = req.body;
+    const userId = req.user._id;
 
     const updateData = {};
     if (title !== undefined) updateData.title = title;
@@ -101,24 +107,28 @@ exports.updateGoal = async (req, res) => {
     if (subGoals !== undefined) {
       updateData.subGoals = Array.isArray(subGoals)
         ? subGoals.map((subGoal) => ({
-            ...subGoal,
-            targetDate: subGoal.targetDate
-              ? new Date(subGoal.targetDate)
-              : undefined,
-            completedAt: subGoal.completedAt
-              ? new Date(subGoal.completedAt)
-              : undefined,
-          }))
+          ...subGoal,
+          targetDate: subGoal.targetDate
+            ? new Date(subGoal.targetDate)
+            : undefined,
+          completedAt: subGoal.completedAt
+            ? new Date(subGoal.completedAt)
+            : undefined,
+        }))
         : [];
     }
 
-    const updatedGoal = await Goal.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
+    const updatedGoal = await Goal.findOneAndUpdate(
+      { _id: id, userId },
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     if (!updatedGoal) {
-      return res.status(404).json({ error: "Goal not found" });
+      return res.status(404).json({ error: "Goal not found or access denied" });
     }
 
     res.json(updatedGoal);
@@ -134,10 +144,11 @@ exports.updateGoal = async (req, res) => {
 exports.deleteGoal = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedGoal = await Goal.findByIdAndDelete(id);
+    const userId = req.user._id;
+    const deletedGoal = await Goal.findOneAndDelete({ _id: id, userId });
 
     if (!deletedGoal) {
-      return res.status(404).json({ error: "Goal not found" });
+      return res.status(404).json({ error: "Goal not found or access denied" });
     }
 
     res.json({ message: "Goal deleted successfully", goal: deletedGoal });
@@ -150,7 +161,8 @@ exports.deleteGoal = async (req, res) => {
 exports.getGoalsByFilter = async (req, res) => {
   try {
     const { status, priority, category } = req.query;
-    const filter = {};
+    const userId = req.user._id;
+    const filter = { userId };
 
     if (status) filter.status = status;
     if (priority) filter.priority = priority;
@@ -166,17 +178,21 @@ exports.getGoalsByFilter = async (req, res) => {
 // GET /api/goals/stats - Thống kê goals
 exports.getGoalStats = async (req, res) => {
   try {
-    const totalGoals = await Goal.countDocuments();
-    const completedGoals = await Goal.countDocuments({ status: "Completed" });
+    const userId = req.user._id;
+    const totalGoals = await Goal.countDocuments({ userId });
+    const completedGoals = await Goal.countDocuments({ userId, status: "Completed" });
     const inProgressGoals = await Goal.countDocuments({
+      userId,
       status: "In Progress",
     });
     const notStartedGoals = await Goal.countDocuments({
+      userId,
       status: "Not Started",
     });
-    const onHoldGoals = await Goal.countDocuments({ status: "On Hold" });
+    const onHoldGoals = await Goal.countDocuments({ userId, status: "On Hold" });
 
     const priorityStats = await Goal.aggregate([
+      { $match: { userId } },
       {
         $group: {
           _id: "$priority",
@@ -187,6 +203,7 @@ exports.getGoalStats = async (req, res) => {
 
     // SubGoals statistics
     const goalsWithSubGoals = await Goal.find({
+      userId,
       subGoals: { $exists: true, $ne: [] },
     });
     let totalSubGoals = 0;
@@ -234,10 +251,11 @@ exports.addSubGoal = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, status, targetDate } = req.body;
+    const userId = req.user._id;
 
-    const goal = await Goal.findById(id);
+    const goal = await Goal.findOne({ _id: id, userId });
     if (!goal) {
-      return res.status(404).json({ error: "Goal not found" });
+      return res.status(404).json({ error: "Goal not found or access denied" });
     }
 
     const newSubGoal = {
@@ -261,10 +279,11 @@ exports.updateSubGoal = async (req, res) => {
   try {
     const { goalId, subgoalId } = req.params;
     const { title, description, status, targetDate, completedAt } = req.body;
+    const userId = req.user._id;
 
-    const goal = await Goal.findById(goalId);
+    const goal = await Goal.findOne({ _id: goalId, userId });
     if (!goal) {
-      return res.status(404).json({ error: "Goal not found" });
+      return res.status(404).json({ error: "Goal not found or access denied" });
     }
 
     const subGoal = goal.subGoals.id(subgoalId);
@@ -300,10 +319,11 @@ exports.updateSubGoal = async (req, res) => {
 exports.deleteSubGoal = async (req, res) => {
   try {
     const { goalId, subgoalId } = req.params;
+    const userId = req.user._id;
 
-    const goal = await Goal.findById(goalId);
+    const goal = await Goal.findOne({ _id: goalId, userId });
     if (!goal) {
-      return res.status(404).json({ error: "Goal not found" });
+      return res.status(404).json({ error: "Goal not found or access denied" });
     }
 
     const subGoal = goal.subGoals.id(subgoalId);

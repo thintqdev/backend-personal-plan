@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const taskController = require("../controllers/taskController");
+const auth = require("../middleware/auth");
 
 /**
  * @swagger
@@ -53,13 +54,16 @@ const taskController = require("../controllers/taskController");
  *   get:
  *     summary: Lấy trạng thái task
  */
-router.get("/", taskController.getTasks); // ?day=Thứ Hai
-router.post("/", taskController.createTask);
-router.put("/:id", taskController.updateTask);
-router.delete("/:id", taskController.deleteTask);
+router.get("/", auth, taskController.getTasks); // ?day=Thứ Hai
+router.post("/", auth, taskController.createTask);
+router.put("/:id", auth, taskController.updateTask);
+router.delete("/:id", auth, taskController.deleteTask);
 
 // Task completion endpoints
-router.patch("/:id/complete", taskController.toggleTaskComplete);
-router.get("/:id/status", taskController.getTaskStatus);
+router.patch("/:id/complete", auth, taskController.toggleTaskComplete);
+router.get("/:id/status", auth, taskController.getTaskStatus);
+
+// Weekly statistics endpoint
+router.get("/weekly-stats", auth, taskController.getWeeklyStats);
 
 module.exports = router;

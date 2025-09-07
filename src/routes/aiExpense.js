@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const auth = require("../middleware/auth");
 const {
     parseExpenseText,
     getExpenseSuggestions,
@@ -72,7 +73,7 @@ const {
  *                 message:
  *                   type: string
  */
-router.post('/parse', parseExpenseText);
+router.post('/parse', auth, parseExpenseText);
 
 /**
  * @swagger
@@ -102,7 +103,7 @@ router.post('/parse', parseExpenseText);
  *                     jarsCount:
  *                       type: number
  */
-router.get('/suggestions', getExpenseSuggestions);
+router.get('/suggestions', auth, getExpenseSuggestions);
 
 /**
  * @swagger
@@ -138,6 +139,6 @@ router.get('/suggestions', getExpenseSuggestions);
  *       201:
  *         description: Tạo giao dịch thành công
  */
-router.post('/create', createExpenseFromAI);
+router.post('/create', auth, createExpenseFromAI);
 
 module.exports = router;

@@ -3,7 +3,7 @@ const SavingsGoal = require('../models/SavingsGoal');
 // Get all savings goals for a user
 const getSavingsGoals = async (req, res) => {
     try {
-        const userId = req.user?.id || '66f4b8c123456789abcdef01'; // Mock user ID for development
+        const userId = req.user._id;
 
         const goals = await SavingsGoal.find({ userId }).sort({ createdAt: -1 });
 
@@ -29,7 +29,7 @@ const getSavingsGoals = async (req, res) => {
 // Create a new savings goal
 const createSavingsGoal = async (req, res) => {
     try {
-        const userId = req.user?.id || '66f4b8c123456789abcdef01'; // Mock user ID for development
+        const userId = req.user._id;
 
         const {
             name,
@@ -110,7 +110,7 @@ const createSavingsGoal = async (req, res) => {
 const updateSavingsGoal = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id || '66f4b8c123456789abcdef01'; // Mock user ID for development
+        const userId = req.user._id;
 
         const goal = await SavingsGoal.findOne({ _id: id, userId });
 
@@ -206,7 +206,7 @@ const updateSavingsGoal = async (req, res) => {
 const deleteSavingsGoal = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id || '66f4b8c123456789abcdef01'; // Mock user ID for development
+        const userId = req.user._id;
 
         const goal = await SavingsGoal.findOne({ _id: id, userId });
 
@@ -238,7 +238,7 @@ const addMoneyToGoal = async (req, res) => {
     try {
         const { id } = req.params;
         const { amount, description } = req.body;
-        const userId = req.user?.id || '66f4b8c123456789abcdef01'; // Mock user ID for development
+        const userId = req.user._id;
 
         if (!amount || amount <= 0) {
             return res.status(400).json({
@@ -278,7 +278,7 @@ const withdrawMoneyFromGoal = async (req, res) => {
     try {
         const { id } = req.params;
         const { amount, description } = req.body;
-        const userId = req.user?.id || '66f4b8c123456789abcdef01'; // Mock user ID for development
+        const userId = req.user._id;
 
         if (!amount || amount <= 0) {
             return res.status(400).json({
@@ -326,7 +326,7 @@ const withdrawMoneyFromGoal = async (req, res) => {
 const getSavingsGoalTransactions = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user?.id || '66f4b8c123456789abcdef01'; // Mock user ID for development
+        const userId = req.user._id;
 
         const goal = await SavingsGoal.findOne({ _id: id, userId });
 

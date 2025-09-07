@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/authController");
+const auth = require("../middleware/auth");
 
 
 /**
@@ -137,5 +138,50 @@ router.post("/reset-password", authController.resetPassword);
  *         description: Token không hợp lệ hoặc đã hết hạn
  */
 router.get("/verify-email/:token", authController.verifyEmail);
+
+/**
+ * @swagger
+ * /api/auth/verify-email:
+ *   post:
+ *     summary: Xác thực email (POST method)
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Xác thực email thành công
+ *       400:
+ *         description: Token không hợp lệ hoặc đã hết hạn
+ */
+router.post("/verify-email", (req, res) => {
+    // Chuyển token từ body thành params để dùng chung với verifyEmail
+    req.params.token = req.body.token;
+    authController.verifyEmail(req, res);
+});
+
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: Lấy thông tin user hiện tại
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Thông tin user
+ *       401:
+ *         description: Không có quyền truy cập
+ */
+router.get("/me", auth, authController.getCurrentUser);
 
 module.exports = router;

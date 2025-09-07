@@ -22,7 +22,12 @@ const financeRouter = require("./routes/finance");
 const noteRouter = require("./routes/note");
 const savingsGoalRouter = require("./routes/savingsGoal");
 const aiExpenseRouter = require("./routes/aiExpense");
+const authRouter = require("./routes/auth");
+const emailAdminRouter = require("./routes/emailAdmin");
+const resendVerificationRouter = require("./routes/resendVerificationEmail");
+const tokenAdminRouter = require("./routes/tokenAdmin");
 
+app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 app.use("/api/quotes", quoteRouter);
 app.use("/api/tasks", taskRouter);
@@ -32,6 +37,9 @@ app.use("/api/finance", financeRouter);
 app.use("/api/notes", noteRouter);
 app.use("/api/savings-goals", savingsGoalRouter);
 app.use("/api/ai-expense", aiExpenseRouter);
+app.use("/api/admin/email", emailAdminRouter);
+app.use("/api/admin/tokens", tokenAdminRouter);
+app.use("/api/resend-verification", resendVerificationRouter);
 
 mongoose
   .connect(process.env.MONGODB_URI)
@@ -41,6 +49,10 @@ mongoose
     // Start cron jobs after DB connection
     const { startCronJobs } = require("./services/cronService");
     startCronJobs();
+
+    // Initialize MongoDB email queue service
+    const emailQueue = require("./services/emailQueueMongoDB");
+    console.log("MongoDB email queue service initialized");
   })
   .catch((err) => console.error("MongoDB connection error:", err));
 

@@ -1,17 +1,9 @@
-// Các hằng số dùng chung cho toàn hệ thống
-
 const USER_STATUS = {
-    ACTIVE: "active",
-    INACTIVE: "inactive",
-    BANNED: "banned",
-};
-
-const USER_ROLE = {
-    USER: "user",
-    // Có thể bổ sung thêm các role khác nếu cần
+    ACTIVE: 1,
+    INACTIVE: 0,
+    BANNED: 2,
 };
 
 module.exports = {
     USER_STATUS,
-    USER_ROLE,
 };

@@ -4,15 +4,15 @@ require("dotenv").config();
 
 const userData = {
   name: "Trần Quang Thìn",
-  email: "admin@thinplan.com",
-  password: "123456", // Sẽ được hash tự động bởi pre-save hook
+  email: "thintq@thinplan.com",
+  password: "$2a$12$1mDGM8VxePsNCwr.E3.8SuCi.sLqi.l2kqV5amwKkB1NeQlakD.Bi", // 123123
   role: "Developer",
   goal: "JLPT N3",
   streak: 1,
-  income: 16000000, // 15 triệu VND
+  income: 16000000,
   avatar:
     "https://jbagy.me/wp-content/uploads/2025/03/hinh-anh-avatar-anime-chibi-boy-11.jpg",
-  status: "active",
+  status: 1,
   verified_email_at: new Date(),
 };
 

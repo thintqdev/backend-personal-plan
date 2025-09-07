@@ -5,9 +5,6 @@ const goalSeeder = require("./goalSeeder");
 const noteSeeder = require("./noteSeeder");
 const quoteSeeder = require("./quoteSeeder");
 const financeSeeder = require("./financeSeeder");
-const monthlyReportSeeder = require("./monthlyReportSeeder");
-// const planSeeder = require("./planSeeder"); // Đã xóa file này
-// ... import các seeder khác nếu có
 
 require("dotenv").config();
 
@@ -38,9 +35,6 @@ async function main() {
         noteSeeder(user._id),
         quoteSeeder(user._id),
         financeSeeder(user._id),
-        monthlyReportSeeder(user._id),
-        // planSeeder(user._id), // Đã xóa file này
-        // ... các seeder khác
     ]);
     await mongoose.disconnect();
     console.log("Seed xong tất cả dữ liệu!");
