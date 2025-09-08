@@ -25,7 +25,9 @@ const aiExpenseRouter = require("./routes/aiExpense");
 const authRouter = require("./routes/auth");
 const emailAdminRouter = require("./routes/emailAdmin");
 const resendVerificationRouter = require("./routes/resendVerificationEmail");
+
 const tokenAdminRouter = require("./routes/tokenAdmin");
+const dairyRouter = require("./routes/dairy");
 
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
@@ -39,6 +41,7 @@ app.use("/api/savings-goals", savingsGoalRouter);
 app.use("/api/ai-expense", aiExpenseRouter);
 app.use("/api/admin/email", emailAdminRouter);
 app.use("/api/admin/tokens", tokenAdminRouter);
+app.use("/api/dairies", dairyRouter);
 app.use("/api/resend-verification", resendVerificationRouter);
 
 mongoose
