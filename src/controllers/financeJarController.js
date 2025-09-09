@@ -30,7 +30,9 @@ exports.getJarById = async (req, res) => {
     const jar = await FinanceJar.findOne({ _id: id, userId });
 
     if (!jar) {
-      return res.status(404).json({ error: "Finance jar not found or access denied" });
+      return res
+        .status(404)
+        .json({ error: "Finance jar not found or access denied" });
     }
 
     res.json(jar);
@@ -111,7 +113,9 @@ exports.updateJar = async (req, res) => {
 
     const currentJar = await FinanceJar.findOne({ _id: id, userId });
     if (!currentJar) {
-      return res.status(404).json({ error: "Finance jar not found or access denied" });
+      return res
+        .status(404)
+        .json({ error: "Finance jar not found or access denied" });
     }
 
     // Check percentage if being updated
@@ -169,7 +173,11 @@ exports.deleteJar = async (req, res) => {
     const userId = req.user._id;
 
     // Check if jar has transactions
-    const transactionCount = await Transaction.countDocuments({ jarId: id, userId });
+    const transactionCount = await Transaction.countDocuments({
+      jarId: id,
+      userId,
+    });
+
     if (transactionCount > 0) {
       return res.status(400).json({
         error: `Cannot delete jar with ${transactionCount} transactions. Please delete transactions first.`,
@@ -178,7 +186,9 @@ exports.deleteJar = async (req, res) => {
 
     const deletedJar = await FinanceJar.findOneAndDelete({ _id: id, userId });
     if (!deletedJar) {
-      return res.status(404).json({ error: "Finance jar not found or access denied" });
+      return res
+        .status(404)
+        .json({ error: "Finance jar not found or access denied" });
     }
 
     res.json({ message: "Finance jar deleted successfully", jar: deletedJar });

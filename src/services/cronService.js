@@ -4,10 +4,10 @@ const User = require("../models/User");
 const emailService = require("./emailService");
 const { cleanupExpiredTokens } = require("../utils/tokenUtils");
 
-// Cron job chạy vào ngày đầu tiên của tháng lúc 00:01
+// Cron job chạy vào ngày 10 của tháng lúc 00:01
 // Format: minute hour day month dayOfWeek
 const monthlyReportCron = cron.schedule(
-  "1 0 1 * *", // 00:01 ngày 1 hàng tháng
+  "1 0 10 * *", // 00:01 ngày 10 hàng tháng
   async () => {
     console.log("Running monthly report generation...");
     try {
@@ -57,7 +57,7 @@ const emailCleanupCron = cron.schedule(
   },
   {
     scheduled: false,
-    timezone: "Asia/Ho_Chi_Minh"
+    timezone: "Asia/Ho_Chi_Minh",
   }
 );
 
@@ -75,7 +75,7 @@ const tokenCleanupCron = cron.schedule(
   },
   {
     scheduled: false,
-    timezone: "Asia/Ho_Chi_Minh"
+    timezone: "Asia/Ho_Chi_Minh",
   }
 );
 
