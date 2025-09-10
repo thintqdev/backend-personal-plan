@@ -2,20 +2,16 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const { runManualMonthlyReport } = require("../services/cronService");
 
-const connectToDatabase = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log("MongoDB connected");
-  } catch (error) {
-    console.error("MongoDB connection error:", error);
-    process.exit(1);
-  }
-};
+async function connectToDatabase() {
+  await mongoose.connect(process.env.MONGODB_URI);
+}
 
-const seedMonthlyReport = async () => {
+async function seedMonthlyReport(userId) {
+  if (!userId) throw new Error("Thiếu userId khi seed monthly report");
+  await connectToDatabase();
   try {
     console.log("Generating monthly report for current month...");
-    const report = await runManualMonthlyReport();
+    const report = await runManualMonthlyReport(userId);
     console.log("Monthly report generated successfully!");
     console.log("Report summary:", {
       month: report.month,
@@ -30,19 +26,20 @@ const seedMonthlyReport = async () => {
   } catch (error) {
     console.error("Error generating monthly report:", error);
   } finally {
-    await mongoose.connection.close();
+    await mongoose.disconnect();
     console.log("Database connection closed");
   }
-};
-
-// Chạy seeder
-const runSeeder = async () => {
-  await connectToDatabase();
-  await seedMonthlyReport();
-};
-
-if (require.main === module) {
-  runSeeder();
 }
 
-module.exports = { seedMonthlyReport };
+if (require.main === module) {
+  require("dotenv").config();
+  (async () => {
+    await connectToDatabase();
+    const User = require("../models/User");
+    const user = await User.findOne();
+    if (!user) throw new Error("Chưa có user để seed monthly report");
+    await seedMonthlyReport(user._id);
+  })();
+}
+
+module.exports = seedMonthlyReport;

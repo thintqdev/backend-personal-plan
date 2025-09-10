@@ -105,7 +105,8 @@ exports.deleteFolder = async (req, res) => {
 // GET /api/notes - Lấy tất cả notes với thông tin folder
 exports.getAllNotes = async (req, res) => {
     try {
-        const notes = await Note.find({ isArchived: false })
+        const userId = req.user._id;
+        const notes = await Note.find({ userId, isArchived: false })
             .populate("folderId", "label color icon")
             .sort({ createdAt: -1 });
         res.json(notes);
@@ -117,8 +118,9 @@ exports.getAllNotes = async (req, res) => {
 // GET /api/notes/tree - Lấy cấu trúc cây notes theo folder
 exports.getNotesTree = async (req, res) => {
     try {
+        const userId = req.user._id;
         const folders = await NoteFolder.find().sort({ sortOrder: 1, createdAt: 1 });
-        const notes = await Note.find({ isArchived: false }).sort({ createdAt: -1 });
+        const notes = await Note.find({ userId, isArchived: false }).sort({ createdAt: -1 });
 
         const notesTree = folders.map(folder => ({
             id: folder._id.toString(),
@@ -153,10 +155,11 @@ exports.getNotesTree = async (req, res) => {
 exports.getNoteById = async (req, res) => {
     try {
         const { id } = req.params;
-        const note = await Note.findById(id).populate("folderId", "label color icon");
+        const userId = req.user._id;
+        const note = await Note.findOne({ _id: id, userId }).populate("folderId", "label color icon");
 
         if (!note) {
-            return res.status(404).json({ error: "Note not found" });
+            return res.status(404).json({ error: "Note not found or access denied" });
         }
 
         // Update last viewed timestamp
@@ -173,6 +176,7 @@ exports.getNoteById = async (req, res) => {
 exports.getNotesByFolder = async (req, res) => {
     try {
         const { folderId } = req.params;
+        const userId = req.user._id;
 
         // Verify folder exists
         const folder = await NoteFolder.findById(folderId);
@@ -181,6 +185,7 @@ exports.getNotesByFolder = async (req, res) => {
         }
 
         const notes = await Note.find({
+            userId,
             folderId: folderId,
             isArchived: false
         }).sort({ createdAt: -1 });
@@ -195,6 +200,7 @@ exports.getNotesByFolder = async (req, res) => {
 exports.createNote = async (req, res) => {
     try {
         const { title, content, folderId, tags } = req.body;
+        const userId = req.user._id;
 
         if (!title || !title.trim()) {
             return res.status(400).json({ error: "Note title is required" });
@@ -215,6 +221,7 @@ exports.createNote = async (req, res) => {
         }
 
         const noteData = {
+            userId,
             title: title.trim(),
             content: content,
             folderId: folderId,
@@ -241,6 +248,7 @@ exports.updateNote = async (req, res) => {
     try {
         const { id } = req.params;
         const { title, content, folderId, tags, isFavorite, isArchived } = req.body;
+        const userId = req.user._id;
 
         const updateData = {};
         if (title !== undefined) updateData.title = title.trim();
@@ -259,13 +267,17 @@ exports.updateNote = async (req, res) => {
         if (isFavorite !== undefined) updateData.isFavorite = isFavorite;
         if (isArchived !== undefined) updateData.isArchived = isArchived;
 
-        const updatedNote = await Note.findByIdAndUpdate(id, updateData, {
-            new: true,
-            runValidators: true,
-        }).populate("folderId", "label color icon");
+        const updatedNote = await Note.findOneAndUpdate(
+            { _id: id, userId },
+            updateData,
+            {
+                new: true,
+                runValidators: true,
+            }
+        ).populate("folderId", "label color icon");
 
         if (!updatedNote) {
-            return res.status(404).json({ error: "Note not found" });
+            return res.status(404).json({ error: "Note not found or access denied" });
         }
 
         res.json(updatedNote);
@@ -281,10 +293,11 @@ exports.updateNote = async (req, res) => {
 exports.deleteNote = async (req, res) => {
     try {
         const { id } = req.params;
-        const deletedNote = await Note.findByIdAndDelete(id);
+        const userId = req.user._id;
+        const deletedNote = await Note.findOneAndDelete({ _id: id, userId });
 
         if (!deletedNote) {
-            return res.status(404).json({ error: "Note not found" });
+            return res.status(404).json({ error: "Note not found or access denied" });
         }
 
         res.json({ message: "Note deleted successfully", note: deletedNote });
@@ -297,12 +310,14 @@ exports.deleteNote = async (req, res) => {
 exports.searchNotes = async (req, res) => {
     try {
         const { q, folderId, tags } = req.query;
+        const userId = req.user._id;
 
         if (!q || !q.trim()) {
             return res.status(400).json({ error: "Search query is required" });
         }
 
         const searchFilter = {
+            userId,
             $text: { $search: q.trim() },
             isArchived: false,
         };

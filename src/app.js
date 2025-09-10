@@ -20,7 +20,18 @@ const statsRouter = require("./routes/stats");
 const goalRouter = require("./routes/goal");
 const financeRouter = require("./routes/finance");
 const noteRouter = require("./routes/note");
+const savingsGoalRouter = require("./routes/savingsGoal");
+const aiExpenseRouter = require("./routes/aiExpense");
+const authRouter = require("./routes/auth");
+const emailAdminRouter = require("./routes/emailAdmin");
+const resendVerificationRouter = require("./routes/resendVerificationEmail");
+const tokenAdminRouter = require("./routes/tokenAdmin");
+const dairyRouter = require("./routes/dairy");
+const investmentRoutes = require("./routes/investmentRoutes");
+const assetRoutes = require("./routes/assetRoutes");
+const coverRouter = require("./routes/cover");
 
+app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
 app.use("/api/quotes", quoteRouter);
 app.use("/api/tasks", taskRouter);
@@ -28,6 +39,15 @@ app.use("/api/stats", statsRouter);
 app.use("/api/goals", goalRouter);
 app.use("/api/finance", financeRouter);
 app.use("/api/notes", noteRouter);
+app.use("/api/savings-goals", savingsGoalRouter);
+app.use("/api/ai-expense", aiExpenseRouter);
+app.use("/api/admin/email", emailAdminRouter);
+app.use("/api/admin/tokens", tokenAdminRouter);
+app.use("/api/dairies", dairyRouter);
+app.use("/api/resend-verification", resendVerificationRouter);
+app.use("/api/investments", investmentRoutes);
+app.use("/api/assets", assetRoutes);
+app.use("/api/covers", coverRouter);
 
 mongoose
   .connect(process.env.MONGODB_URI)
@@ -37,6 +57,10 @@ mongoose
     // Start cron jobs after DB connection
     const { startCronJobs } = require("./services/cronService");
     startCronJobs();
+
+    // Initialize MongoDB email queue service
+    const emailQueue = require("./services/emailQueueMongoDB");
+    console.log("MongoDB email queue service initialized");
   })
   .catch((err) => console.error("MongoDB connection error:", err));
 

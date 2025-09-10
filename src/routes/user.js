@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
+const auth = require("../middleware/auth");
 
 /**
  * @swagger
@@ -140,14 +141,14 @@ const userController = require("../controllers/userController");
  *       404:
  *         description: User không tồn tại
  */
-router.get("/", userController.getUser);
-router.put("/", userController.updateUser);
+router.get("/", auth, userController.getUser);
+router.put("/", auth, userController.updateUser);
 
 // New preferences endpoints
-router.get("/preferences", userController.getUserPreferences);
-router.put("/preferences", userController.updateUserPreferences);
+router.get("/preferences", auth, userController.getUserPreferences);
+router.put("/preferences", auth, userController.updateUserPreferences);
 
 // Income endpoint
-router.put("/income", userController.updateUserIncome);
+router.put("/income", auth, userController.updateUserIncome);
 
 module.exports = router;

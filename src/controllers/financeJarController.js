@@ -5,7 +5,8 @@ const Transaction = require("../models/Transaction");
 exports.getAllJars = async (req, res) => {
   try {
     const { isActive, priority, category } = req.query;
-    const filter = {};
+    const userId = req.user._id;
+    const filter = { userId };
 
     if (isActive !== undefined) filter.isActive = isActive === "true";
     if (priority) filter.priority = priority;
@@ -25,10 +26,13 @@ exports.getAllJars = async (req, res) => {
 exports.getJarById = async (req, res) => {
   try {
     const { id } = req.params;
-    const jar = await FinanceJar.findById(id);
+    const userId = req.user._id;
+    const jar = await FinanceJar.findOne({ _id: id, userId });
 
     if (!jar) {
-      return res.status(404).json({ error: "Finance jar not found" });
+      return res
+        .status(404)
+        .json({ error: "Finance jar not found or access denied" });
     }
 
     res.json(jar);
@@ -50,9 +54,10 @@ exports.createJar = async (req, res) => {
       priority,
       category,
     } = req.body;
+    const userId = req.user._id;
 
     // Check if total percentage exceeds 100%
-    const existingJars = await FinanceJar.find({ isActive: true });
+    const existingJars = await FinanceJar.find({ userId, isActive: true });
     const totalPercentage = existingJars.reduce(
       (sum, jar) => sum + jar.percentage,
       0
@@ -65,6 +70,7 @@ exports.createJar = async (req, res) => {
     }
 
     const jarData = {
+      userId,
       name,
       description,
       targetAmount,
@@ -103,15 +109,19 @@ exports.updateJar = async (req, res) => {
       category,
       isActive,
     } = req.body;
+    const userId = req.user._id;
 
-    const currentJar = await FinanceJar.findById(id);
+    const currentJar = await FinanceJar.findOne({ _id: id, userId });
     if (!currentJar) {
-      return res.status(404).json({ error: "Finance jar not found" });
+      return res
+        .status(404)
+        .json({ error: "Finance jar not found or access denied" });
     }
 
     // Check percentage if being updated
     if (percentage !== undefined && percentage !== currentJar.percentage) {
       const otherJars = await FinanceJar.find({
+        userId,
         isActive: true,
         _id: { $ne: id },
       });
@@ -138,10 +148,14 @@ exports.updateJar = async (req, res) => {
     if (category !== undefined) updateData.category = category;
     if (isActive !== undefined) updateData.isActive = isActive;
 
-    const updatedJar = await FinanceJar.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
+    const updatedJar = await FinanceJar.findOneAndUpdate(
+      { _id: id, userId },
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
     res.json(updatedJar);
   } catch (err) {
@@ -156,18 +170,25 @@ exports.updateJar = async (req, res) => {
 exports.deleteJar = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user._id;
 
     // Check if jar has transactions
-    const transactionCount = await Transaction.countDocuments({ jarId: id });
+    const transactionCount = await Transaction.countDocuments({
+      jarId: id,
+      userId,
+    });
+
     if (transactionCount > 0) {
       return res.status(400).json({
         error: `Cannot delete jar with ${transactionCount} transactions. Please delete transactions first.`,
       });
     }
 
-    const deletedJar = await FinanceJar.findByIdAndDelete(id);
+    const deletedJar = await FinanceJar.findOneAndDelete({ _id: id, userId });
     if (!deletedJar) {
-      return res.status(404).json({ error: "Finance jar not found" });
+      return res
+        .status(404)
+        .json({ error: "Finance jar not found or access denied" });
     }
 
     res.json({ message: "Finance jar deleted successfully", jar: deletedJar });
@@ -179,11 +200,13 @@ exports.deleteJar = async (req, res) => {
 // GET /api/finance/overview - Lấy tổng quan tài chính
 exports.getFinanceOverview = async (req, res) => {
   try {
-    const activeJars = await FinanceJar.find({ isActive: true });
-    const allJars = await FinanceJar.find();
+    const userId = req.user._id;
+    const activeJars = await FinanceJar.find({ userId, isActive: true });
+    const allJars = await FinanceJar.find({ userId });
 
     // Calculate totals from transactions
     const transactionStats = await Transaction.aggregate([
+      { $match: { userId } },
       {
         $group: {
           _id: null,

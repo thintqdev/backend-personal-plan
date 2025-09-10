@@ -89,21 +89,23 @@ const sampleGoals = [
   },
 ];
 
-async function seedGoals() {
-  await mongoose.connect(process.env.MONGODB_URI);
-
-  // Clear existing goals
-  await Goal.deleteMany({});
-
-  // Insert sample goals
-  for (const goalData of sampleGoals) {
-    const goal = new Goal(goalData);
-    await goal.save();
-  }
-
-  console.log("Goals seeded successfully!");
-  console.log(`Inserted ${sampleGoals.length} goals`);
-  await mongoose.disconnect();
+async function seedGoals(userId) {
+  if (!userId) throw new Error("Thiếu userId khi seed goals");
+  const goalsWithUser = sampleGoals.map(g => ({ ...g, userId }));
+  await Goal.deleteMany({ userId });
+  await Goal.insertMany(goalsWithUser);
+  console.log("Goals seeded!");
 }
 
-seedGoals().catch(console.error);
+if (require.main === module) {
+  require("dotenv").config();
+  const mongoose = require("mongoose");
+  mongoose.connect(process.env.MONGODB_URI).then(async () => {
+    const User = require("../models/User");
+    const user = await User.findOne();
+    if (!user) throw new Error("Chưa có user để seed goals");
+    await seedGoals(user._id);
+    await mongoose.disconnect();
+  });
+}
+module.exports = seedGoals;

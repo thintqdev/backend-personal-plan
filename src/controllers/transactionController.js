@@ -1,31 +1,149 @@
 const Transaction = require("../models/Transaction");
 const FinanceJar = require("../models/FinanceJar");
+const mongoose = require("mongoose");
 
-// GET /api/finance/transactions - Lấy tất cả transactions
+// GET /api/finance/transactions - Lấy tất cả transactions với pagination và filtering
 exports.getAllTransactions = async (req, res) => {
   try {
-    const { jarId, type, category, startDate, endDate, limit } = req.query;
-    const filter = {};
+    const {
+      jarId,
+      type,
+      category,
+      startDate,
+      endDate,
+      month, // YYYY-MM format
+      dateFilter, // YYYY-MM-DD format
+      search,
+      page = 1,
+      limit = 10,
+      sortBy = "date",
+      sortOrder = "desc",
+    } = req.query;
 
-    if (jarId) filter.jarId = jarId;
-    if (type) filter.type = type;
-    if (category) filter.category = category;
+    const userId = req.user._id;
+    const filter = { userId };
+
+    // Jar filter
+    if (jarId && jarId !== "all") {
+      filter.jarId = jarId;
+    }
+
+    // Type filter
+    if (type) {
+      filter.type = type;
+    }
+
+    // Category filter
+    if (category) {
+      filter.category = category;
+    }
+
+    // Date range filter
     if (startDate || endDate) {
       filter.date = {};
       if (startDate) filter.date.$gte = new Date(startDate);
       if (endDate) filter.date.$lte = new Date(endDate);
     }
 
-    let query = Transaction.find(filter)
-      .populate("jarId", "name color icon")
-      .sort({ date: -1, createdAt: -1 });
-
-    if (limit) {
-      query = query.limit(parseInt(limit));
+    // Month filter (YYYY-MM)
+    if (month) {
+      const monthStart = new Date(month + "-01");
+      const monthEnd = new Date(
+        monthStart.getFullYear(),
+        monthStart.getMonth() + 1,
+        0
+      );
+      filter.date = {
+        $gte: monthStart,
+        $lte: monthEnd,
+      };
     }
 
-    const transactions = await query;
-    res.json(transactions);
+    // Specific date filter (YYYY-MM-DD)
+    if (dateFilter) {
+      const dayStart = new Date(dateFilter);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+      filter.date = {
+        $gte: dayStart,
+        $lt: dayEnd,
+      };
+    }
+
+    // Search filter (description, category, jar name)
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      filter.$or = [{ description: searchRegex }, { category: searchRegex }];
+    }
+
+    // Pagination
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Sort options
+    const sortOptions = {};
+    sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
+    if (sortBy !== "createdAt") {
+      sortOptions.createdAt = -1; // Secondary sort
+    }
+
+    // Get total count for pagination
+    const totalCount = await Transaction.countDocuments(filter);
+
+    // Get transactions with pagination
+    const transactions = await Transaction.find(filter)
+      .populate("jarId", "name color icon")
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limitNum);
+
+    // Filter by jar name if search is provided (since we can't do this in MongoDB query)
+    let filteredTransactions = transactions;
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filteredTransactions = transactions.filter((transaction) => {
+        const jarName = transaction.jarId?.name?.toLowerCase() || "";
+        const descriptionMatch = transaction.description
+          .toLowerCase()
+          .includes(searchLower);
+        const categoryMatch = transaction.category
+          .toLowerCase()
+          .includes(searchLower);
+        const jarNameMatch = jarName.includes(searchLower);
+
+        return descriptionMatch || categoryMatch || jarNameMatch;
+      });
+    }
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalCount / limitNum);
+    const hasNextPage = pageNum < totalPages;
+    const hasPrevPage = pageNum > 1;
+
+    res.json({
+      transactions: filteredTransactions,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalCount,
+        limit: limitNum,
+        hasNextPage,
+        hasPrevPage,
+      },
+      filters: {
+        jarId,
+        type,
+        category,
+        startDate,
+        endDate,
+        month,
+        dateFilter,
+        search,
+        sortBy,
+        sortOrder,
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -35,13 +153,16 @@ exports.getAllTransactions = async (req, res) => {
 exports.getTransactionById = async (req, res) => {
   try {
     const { id } = req.params;
-    const transaction = await Transaction.findById(id).populate(
+    const userId = req.user._id;
+    const transaction = await Transaction.findOne({ _id: id, userId }).populate(
       "jarId",
       "name color icon"
     );
 
     if (!transaction) {
-      return res.status(404).json({ error: "Transaction not found" });
+      return res
+        .status(404)
+        .json({ error: "Transaction not found or access denied" });
     }
 
     res.json(transaction);
@@ -55,14 +176,17 @@ exports.getTransactionsByJar = async (req, res) => {
   try {
     const { jarId } = req.params;
     const { type, startDate, endDate, limit } = req.query;
+    const userId = req.user._id;
 
-    // Check if jar exists
-    const jar = await FinanceJar.findById(jarId);
+    // Check if jar exists and belongs to user
+    const jar = await FinanceJar.findOne({ _id: jarId, userId });
     if (!jar) {
-      return res.status(404).json({ error: "Finance jar not found" });
+      return res
+        .status(404)
+        .json({ error: "Finance jar not found or access denied" });
     }
 
-    const filter = { jarId };
+    const filter = { jarId, userId };
     if (type) filter.type = type;
     if (startDate || endDate) {
       filter.date = {};
@@ -89,23 +213,18 @@ exports.getTransactionsByJar = async (req, res) => {
 exports.createTransaction = async (req, res) => {
   try {
     const { jarId, amount, type, description, category, date } = req.body;
+    const userId = req.user._id;
 
-    // Check if jar exists
-    const jar = await FinanceJar.findById(jarId);
+    // Check if jar exists and belongs to user
+    const jar = await FinanceJar.findOne({ _id: jarId, userId });
     if (!jar) {
-      return res.status(404).json({ error: "Finance jar not found" });
+      return res
+        .status(404)
+        .json({ error: "Finance jar not found or access denied" });
     }
 
-    // For expense, check if jar has enough balance (optional - comment out to allow negative balance)
-    // if (type === "expense") {
-    //   if (jar.currentAmount < amount) {
-    //     return res.status(400).json({
-    //       error: `Insufficient balance. Current: ${jar.currentAmount}, Required: ${amount}`,
-    //     });
-    //   }
-    // }
-
     const transactionData = {
+      userId,
       jarId,
       amount,
       type,
@@ -134,17 +253,22 @@ exports.updateTransaction = async (req, res) => {
   try {
     const { id } = req.params;
     const { jarId, amount, type, description, category, date } = req.body;
+    const userId = req.user._id;
 
-    const currentTransaction = await Transaction.findById(id);
+    const currentTransaction = await Transaction.findOne({ _id: id, userId });
     if (!currentTransaction) {
-      return res.status(404).json({ error: "Transaction not found" });
+      return res
+        .status(404)
+        .json({ error: "Transaction not found or access denied" });
     }
 
-    // If jarId is being changed, check if new jar exists
+    // If jarId is being changed, check if new jar exists and belongs to user
     if (jarId && jarId !== currentTransaction.jarId.toString()) {
-      const jar = await FinanceJar.findById(jarId);
+      const jar = await FinanceJar.findOne({ _id: jarId, userId });
       if (!jar) {
-        return res.status(404).json({ error: "Finance jar not found" });
+        return res
+          .status(404)
+          .json({ error: "Finance jar not found or access denied" });
       }
     }
 
@@ -156,8 +280,8 @@ exports.updateTransaction = async (req, res) => {
     if (category !== undefined) updateData.category = category;
     if (date !== undefined) updateData.date = new Date(date);
 
-    const updatedTransaction = await Transaction.findByIdAndUpdate(
-      id,
+    const updatedTransaction = await Transaction.findOneAndUpdate(
+      { _id: id, userId },
       updateData,
       { new: true, runValidators: true }
     ).populate("jarId", "name color icon");
@@ -175,10 +299,17 @@ exports.updateTransaction = async (req, res) => {
 exports.deleteTransaction = async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedTransaction = await Transaction.findByIdAndDelete(id);
+    const userId = req.user._id;
+
+    const deletedTransaction = await Transaction.findOneAndDelete({
+      _id: id,
+      userId,
+    });
 
     if (!deletedTransaction) {
-      return res.status(404).json({ error: "Transaction not found" });
+      return res
+        .status(404)
+        .json({ error: "Transaction not found or access denied" });
     }
 
     res.json({
@@ -194,7 +325,8 @@ exports.deleteTransaction = async (req, res) => {
 exports.getTransactionStats = async (req, res) => {
   try {
     const { jarId, startDate, endDate } = req.query;
-    let matchFilter = {};
+    const userId = req.user._id;
+    let matchFilter = { userId };
 
     if (jarId) matchFilter.jarId = mongoose.Types.ObjectId(jarId);
     if (startDate || endDate) {

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const monthlyReportController = require("../controllers/monthlyReportController");
+const auth = require("../middleware/auth");
 
 /**
  * @swagger
@@ -286,13 +287,14 @@ const monthlyReportController = require("../controllers/monthlyReportController"
  */
 
 // Routes
-router.get("/", monthlyReportController.getMonthlyReports);
-router.post("/generate", monthlyReportController.generateMonthlyReport);
-router.get("/:year/:month", monthlyReportController.getMonthlyReport);
-router.get("/:year/:month/pdf-data", monthlyReportController.getPDFReportData);
-router.get("/:year/:month/pdf", monthlyReportController.generatePDFReport);
+router.get("/", auth, monthlyReportController.getMonthlyReports);
+router.post("/generate", auth, monthlyReportController.generateMonthlyReport);
+router.get("/:year/:month", auth, monthlyReportController.getMonthlyReport);
+router.get("/:year/:month/pdf-data", auth, monthlyReportController.getPDFReportData);
+router.get("/:year/:month/pdf", auth, monthlyReportController.generatePDFReport);
 router.put(
   "/:year/:month/finalize",
+  auth,
   monthlyReportController.finalizeMonthlyReport
 );
 

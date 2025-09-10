@@ -10,14 +10,23 @@ const quotes = [
   "Hành trình ngàn dặm bắt đầu từ một bước chân.",
 ];
 
-async function seedQuotes() {
-  await mongoose.connect(process.env.MONGODB_URI);
-  await Quote.deleteMany({});
-  for (const text of quotes) {
-    await new Quote({ text }).save();
-  }
+async function seedQuotes(userId) {
+  if (!userId) throw new Error("Thiếu userId khi seed quotes");
+  const quotesWithUser = quotes.map(text => ({ text, userId }));
+  await Quote.deleteMany({ userId });
+  await Quote.insertMany(quotesWithUser);
   console.log("Quotes seeded!");
-  await mongoose.disconnect();
 }
 
-seedQuotes();
+if (require.main === module) {
+  require("dotenv").config();
+  const mongoose = require("mongoose");
+  mongoose.connect(process.env.MONGODB_URI).then(async () => {
+    const User = require("../models/User");
+    const user = await User.findOne();
+    if (!user) throw new Error("Chưa có user để seed quotes");
+    await seedQuotes(user._id);
+    await mongoose.disconnect();
+  });
+}
+module.exports = seedQuotes;

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const quoteController = require("../controllers/quoteController");
+const auth = require("../middleware/auth");
 
 /**
  * @swagger
@@ -93,9 +94,9 @@ const quoteController = require("../controllers/quoteController");
  *                 message:
  *                   type: string
  */
-router.get("/", quoteController.getQuotes);
-router.post("/", quoteController.createQuote);
-router.put("/:id", quoteController.updateQuote);
-router.delete("/:id", quoteController.deleteQuote);
+router.get("/", auth, quoteController.getQuotes);
+router.post("/", auth, quoteController.createQuote);
+router.put("/:id", auth, quoteController.updateQuote);
+router.delete("/:id", auth, quoteController.deleteQuote);
 
 module.exports = router;
