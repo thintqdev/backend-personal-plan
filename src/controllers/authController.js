@@ -256,7 +256,7 @@ exports.verifyEmail = async (req, res) => {
 // Lấy thông tin user hiện tại
 exports.getCurrentUser = async (req, res) => {
     try {
-        res.json({ user: req.user });
+        res.json(req.user);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

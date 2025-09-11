@@ -3,11 +3,15 @@ const User = require("../models/User");
 // Lấy thông tin cá nhân
 exports.getUser = async (req, res) => {
   try {
-    // Giả sử chỉ có 1 user (admin)
-    const user = await User.findOne();
-    res.json(user);
+    // Sử dụng req.user từ middleware auth để lấy thông tin user chính xác
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    return res.json(user);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Get user error:", err);
+    return res.status(500).json({ error: err.message });
   }
 };
 
@@ -15,22 +19,25 @@ exports.getUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { name, role, goal, streak, avatar, income } = req.body;
-    let user = await User.findOne();
+
+    // Sử dụng req.user từ middleware auth để tìm user chính xác
+    const user = await User.findById(req.user._id);
     if (!user) {
-      user = new User({ name, role, goal, streak, avatar, income });
-    } else {
-      user.name = name;
-      user.role = role;
-      user.goal = goal;
-      user.streak = streak;
-      user.avatar = avatar;
-      if (income !== undefined) {
-        user.income = income;
-      }
+      return res.status(404).json({ error: "User not found" });
     }
+
+    // Cập nhật các trường
+    if (name !== undefined) user.name = name;
+    if (role !== undefined) user.role = role;
+    if (goal !== undefined) user.goal = goal;
+    if (streak !== undefined) user.streak = streak;
+    if (avatar !== undefined) user.avatar = avatar;
+    if (income !== undefined) user.income = income;
+
     await user.save();
     res.json(user);
   } catch (err) {
+    console.error("Update user error:", err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -101,6 +108,30 @@ exports.updateUserIncome = async (req, res) => {
       income: user.income,
       user: user,
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Change password
+exports.changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+
+    let user = await User.findOne();
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Giả sử user chỉ có 1 tài khoản với mật khẩu đơn giản
+    if (user.password !== oldPassword) {
+      return res.status(400).json({ error: "Old password is incorrect" });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: "Password changed successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
