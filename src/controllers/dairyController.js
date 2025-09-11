@@ -4,6 +4,7 @@ const Dairy = require("../models/Dairy");
 exports.getAllDairies = async (req, res) => {
   try {
     const userId = req.user?._id || req.query.userId;
+    console.log("userId:", userId);
 
     if (!userId) {
       return res.status(400).json({ error: "User authentication required" });

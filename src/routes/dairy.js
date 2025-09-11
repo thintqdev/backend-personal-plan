@@ -1,14 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const dairyController = require("../controllers/dairyController");
+const auth = require("../middleware/auth");
 
 // Lấy danh sách nhật ký của user
-router.get("/", dairyController.getAllDairies);
+router.get("/", auth, dairyController.getAllDairies);
 // Tạo nhật ký mới
-router.post("/", dairyController.createDairy);
+router.post("/", auth, dairyController.createDairy);
 // Sửa nhật ký
-router.put("/:id", dairyController.updateDairy);
+router.put("/:id", auth, dairyController.updateDairy);
 // Xoá nhật ký
-router.delete("/:id", dairyController.deleteDairy);
+router.delete("/:id", auth, dairyController.deleteDairy);
 
 module.exports = router;
