@@ -141,6 +141,7 @@ const auth = require("../middleware/auth");
  *       404:
  *         description: User không tồn tại
  */
+
 router.get("/", auth, userController.getUser);
 router.put("/", auth, userController.updateUser);
 
@@ -150,5 +151,8 @@ router.put("/preferences", auth, userController.updateUserPreferences);
 
 // Income endpoint
 router.put("/income", auth, userController.updateUserIncome);
+
+// Change password endpoint
+router.put("/change-password", auth, userController.changePassword);
 
 module.exports = router;
