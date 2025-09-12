@@ -272,21 +272,30 @@ exports.updateTransaction = async (req, res) => {
       }
     }
 
-    const updateData = {};
-    if (jarId !== undefined) updateData.jarId = jarId;
-    if (amount !== undefined) updateData.amount = amount;
-    if (type !== undefined) updateData.type = type;
-    if (description !== undefined) updateData.description = description;
-    if (category !== undefined) updateData.category = category;
-    if (date !== undefined) updateData.date = new Date(date);
+    // Delete old transaction (this will trigger middleware to update old jar's currentAmount)
+    await Transaction.findOneAndDelete({ _id: id, userId });
 
-    const updatedTransaction = await Transaction.findOneAndUpdate(
-      { _id: id, userId },
-      updateData,
-      { new: true, runValidators: true }
-    ).populate("jarId", "name color icon");
+    // Create new transaction with updated data (this will trigger middleware to update new jar's currentAmount)
+    const transactionData = {
+      userId,
+      jarId: jarId || currentTransaction.jarId,
+      amount: amount !== undefined ? amount : currentTransaction.amount,
+      type: type || currentTransaction.type,
+      description:
+        description !== undefined
+          ? description
+          : currentTransaction.description,
+      category: category !== undefined ? category : currentTransaction.category,
+      date: date ? new Date(date) : currentTransaction.date,
+    };
 
-    res.json(updatedTransaction);
+    const newTransaction = new Transaction(transactionData);
+    await newTransaction.save();
+
+    // Populate jar info before returning
+    await newTransaction.populate("jarId", "name color icon");
+
+    res.json(newTransaction);
   } catch (err) {
     if (err.name === "ValidationError") {
       return res.status(400).json({ error: err.message });

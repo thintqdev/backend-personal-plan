@@ -2,7 +2,11 @@ const mongoose = require("mongoose");
 
 const transactionSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
     jarId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "FinanceJar",
@@ -69,7 +73,7 @@ async function updateJarAmount(FinanceJar, jarId) {
   const currentAmount =
     result.length > 0 ? result[0].totalIncome - result[0].totalExpense : 0;
   await FinanceJar.findByIdAndUpdate(jarId, {
-    currentAmount: currentAmount, // Cho phép balance âm
+    currentAmount: currentAmount,
   });
 }
 
