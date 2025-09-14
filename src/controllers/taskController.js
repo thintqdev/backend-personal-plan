@@ -7,11 +7,11 @@ exports.getTasks = async (req, res) => {
     const userId = req.user._id;
 
     if (!day) {
-      const tasks = await Task.find({ userId });
+      const tasks = await Task.find({ userId }).sort({ time: 1 });
       return res.json(tasks);
     }
 
-    const tasks = await Task.find({ userId, day });
+    const tasks = await Task.find({ userId, day }).sort({ time: 1 });
 
     // Trả về format theo yêu cầu FE
     const response = {
