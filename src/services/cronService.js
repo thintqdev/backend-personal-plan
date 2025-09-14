@@ -1,6 +1,7 @@
 const cron = require("node-cron");
 const { generateReport } = require("../controllers/monthlyReportController");
 const User = require("../models/User");
+const Task = require("../models/Task");
 const emailService = require("./emailService");
 const { cleanupExpiredTokens } = require("../utils/tokenUtils");
 
@@ -79,6 +80,32 @@ const tokenCleanupCron = cron.schedule(
   }
 );
 
+// Cron job để reset tất cả tasks về trạng thái chưa hoàn thành - chạy vào 00:01 thứ Hai hàng tuần
+const weeklyTaskResetCron = cron.schedule(
+  "1 0 * * 1", // 00:01 thứ Hai hàng tuần (1 = Monday)
+  async () => {
+    console.log("Running weekly tasks reset...");
+    try {
+      // Reset tất cả tasks về trạng thái chưa hoàn thành
+      const result = await Task.updateMany(
+        {}, // Không có điều kiện, update tất cả tasks
+        {
+          completed: false,
+          completedAt: null
+        }
+      );
+
+      console.log(`Weekly tasks reset completed successfully: ${result.modifiedCount} tasks reset`);
+    } catch (error) {
+      console.error("Error during weekly tasks reset:", error);
+    }
+  },
+  {
+    scheduled: false,
+    timezone: "Asia/Ho_Chi_Minh",
+  }
+);
+
 // Khởi động các cron jobs
 function startCronJobs() {
   console.log("Starting monthly report cron job...");
@@ -89,6 +116,9 @@ function startCronJobs() {
 
   console.log("Starting token cleanup cron job...");
   tokenCleanupCron.start();
+
+  console.log("Starting weekly task reset cron job...");
+  weeklyTaskResetCron.start();
 
   // Uncomment để test
   // console.log("Starting test cron job...");
@@ -105,6 +135,9 @@ function stopCronJobs() {
 
   console.log("Stopping token cleanup cron job...");
   tokenCleanupCron.stop();
+
+  console.log("Stopping weekly task reset cron job...");
+  weeklyTaskResetCron.stop();
 }
 
 // Chạy manual monthly report cho tháng hiện tại
@@ -142,4 +175,6 @@ module.exports = {
   runManualMonthlyReport,
   monthlyReportCron,
   emailCleanupCron,
+  tokenCleanupCron,
+  weeklyTaskResetCron,
 };
