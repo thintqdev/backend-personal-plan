@@ -30,6 +30,7 @@ const dairyRouter = require("./routes/dairy");
 const investmentRoutes = require("./routes/investmentRoutes");
 const assetRoutes = require("./routes/assetRoutes");
 const coverRouter = require("./routes/cover");
+const aiRouter = require("./routes/ai");
 
 app.use("/api/auth", authRouter);
 app.use("/api/user", userRouter);
@@ -48,6 +49,7 @@ app.use("/api/resend-verification", resendVerificationRouter);
 app.use("/api/investments", investmentRoutes);
 app.use("/api/assets", assetRoutes);
 app.use("/api/covers", coverRouter);
+app.use("/api/ai", aiRouter);
 
 mongoose
   .connect(process.env.MONGODB_URI)
